@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>Delivery Management</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#f5f5f0;min-height:100vh;color:#1a1a1a}
+input:not(.pin-field),select,textarea{-webkit-appearance:none;font-size:16px!important;font-family:'DM Sans',sans-serif}
+.pin-field{font-size:26px!important;letter-spacing:10px;text-align:center}
+input[type=checkbox]{-webkit-appearance:checkbox!important;appearance:checkbox!important}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+.screen{display:none;max-width:960px;margin:0 auto;padding:1rem}
+.screen.active{display:block}
+
+/* PIN */
+.pin-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem}
+.pin-logo{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.pin-title{font-size:20px;font-weight:600;margin-bottom:4px;text-align:center}
+.pin-sub{font-size:13px;color:#888;margin-bottom:24px;text-align:center}
+.pin-field{width:150px;height:56px;border:1.5px solid #ddd;border-radius:12px;text-align:center;letter-spacing:10px;background:#fff;outline:none;padding:0 12px}
+.pin-field:focus{border-color:#2CA01C;box-shadow:0 0 0 3px rgba(44,160,28,.12)}
+.pin-err{font-size:12px;color:#e53935;height:20px;text-align:center;margin-top:8px}
+.pin-btn{margin-top:12px;padding:11px 36px;color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;width:150px}
+.role-btns{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;width:200px}
+.role-btn{padding:12px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;background:#fff;text-align:center;transition:all .2s}
+.role-btn.active{border-color:#2CA01C;background:#e8f5e9;color:#1b5e20}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:12px;border-bottom:1px solid #e8e8e4}
+.top-left{display:flex;align-items:center;gap:10px}
+.top-logo{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.top-title{font-size:15px;font-weight:600}
+.user-badge{font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px}
+.logout-btn{font-size:12px;color:#aaa;background:none;border:none;cursor:pointer;margin-left:8px}
+
+/* CARDS */
+.card{background:#fff;border:1px solid #e8e8e4;border-radius:14px;padding:1rem 1.25rem;margin-bottom:10px}
+.sec-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#aaa;margin-bottom:10px}
+label{font-size:12px;color:#888;display:block;margin-bottom:4px}
+input[type=text],input[type=date],input[type=number],input[type=password],select{width:100%;padding:8px 11px;border:1px solid #e0e0e0;border-radius:8px;background:#fff;color:#1a1a1a;height:42px;outline:none}
+input:focus,select:focus{border-color:#2CA01C;box-shadow:0 0 0 3px rgba(44,160,28,.1)}
+input[readonly]{background:#f8f8f6;cursor:default;color:#555}
+
+/* TABS */
+.tabs{display:flex;gap:2px;background:#e8e8e4;border-radius:10px;padding:3px;margin-bottom:14px;overflow-x:auto}
+.tab{flex:1;min-width:80px;padding:8px 6px;font-size:12px;font-weight:500;text-align:center;border:none;background:transparent;cursor:pointer;border-radius:8px;color:#888;white-space:nowrap}
+.tab.active{background:#fff;color:#1a1a1a;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.panel{display:none}.panel.active{display:block}
+
+/* BUTTONS */
+.btn{padding:8px 16px;font-size:12px;font-weight:600;border-radius:8px;cursor:pointer;border:none;font-family:'DM Sans',sans-serif}
+.btn-green{background:#2CA01C;color:white}
+.btn-blue{background:#185FA5;color:white}
+.btn-purple{background:#534AB7;color:white}
+.btn-red{background:#e53935;color:white}
+.btn-orange{background:#e65100;color:white}
+.btn-out{background:#fff;border:1px solid #ddd;color:#555}
+.btn-full{width:100%;padding:12px;font-size:14px;font-weight:600;border-radius:10px;cursor:pointer;border:none;margin-top:8px}
+
+/* UPLOAD */
+.upload-box{border:2px dashed #ddd;border-radius:12px;padding:24px;text-align:center;background:#fafafa;cursor:pointer;transition:all .2s}
+.upload-box:hover{border-color:#2CA01C;background:#f8fdf8}
+.upload-icon{font-size:32px;margin-bottom:8px}
+.upload-title{font-size:14px;font-weight:500;margin-bottom:4px}
+.upload-sub{font-size:12px;color:#888}
+
+/* INVOICE ROWS */
+.inv-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0ee;cursor:pointer}
+.inv-row:last-child{border-bottom:none}
+.inv-row:hover{background:#f8f8f6;margin:0 -1.25rem;padding:10px 1.25rem;border-radius:8px}
+.inv-info{flex:1;min-width:0}
+.inv-num{font-size:11px;color:#888;font-weight:500}
+.inv-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inv-amt{font-size:13px;font-weight:600;text-align:right;white-space:nowrap}
+.inv-meta{font-size:11px;color:#888;margin-top:2px}
+
+/* STATUS TAGS */
+.tag{font-size:10px;padding:3px 8px;border-radius:8px;font-weight:600;white-space:nowrap}
+.tag-new{background:#e3f2fd;color:#0d47a1}
+.tag-assigned{background:#ede7ff;color:#4527a0}
+.tag-hold{background:#fff3e0;color:#e65100}
+.tag-carry{background:#fce4e4;color:#c62828}
+.tag-packed{background:#e8f5e9;color:#1b5e20}
+.tag-ready{background:#e8f5e9;color:#1b5e20}
+.tag-delivering{background:#e3f2fd;color:#0d47a1}
+.tag-done{background:#e8f5e9;color:#1b5e20}
+.tag-partial{background:#fff3e0;color:#e65100}
+.tag-returned{background:#fce4e4;color:#c62828}
+
+/* DRIVER PROGRESS */
+.driver-card{background:#f8f8f6;border:1px solid #e8e8e4;border-radius:10px;padding:12px;margin-bottom:8px}
+.driver-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.driver-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.driver-name{font-size:14px;font-weight:500}
+.driver-stops{font-size:11px;color:#888}
+.progress-bar{height:6px;background:#e0e0e0;border-radius:4px;overflow:hidden;margin-bottom:6px}
+.progress-fill{height:100%;border-radius:4px;background:#2CA01C;transition:width .3s}
+
+/* SUMMARY GRID */
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.sum-card{background:#f8f8f6;border:1px solid #e8e8e4;border-radius:10px;padding:12px;text-align:center}
+.sum-num{font-size:24px;font-weight:600}
+.sum-lbl{font-size:11px;color:#888;margin-top:2px}
+
+/* STOP ROWS */
+.stop-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #f0f0ee}
+.stop-row:last-child{border-bottom:none}
+.stop-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.stop-num-active{background:#e3f2fd;color:#0d47a1}
+.stop-num-done{background:#e8f5e9;color:#1b5e20}
+.stop-num-pending{background:#f0f0ee;color:#888}
+
+/* BOX COUNT */
+.box-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.box-card{border-radius:10px;padding:10px;text-align:center;border:1px solid #e0e0e0}
+.box-num{font-size:22px;font-weight:600}
+.box-lbl{font-size:10px;margin-top:2px}
+.box-input{width:100%;text-align:center;font-size:22px!important;font-weight:600;border:1px solid #e0e0e0;border-radius:10px;padding:8px;background:#fff;height:52px}
+
+/* SIGNATURE PAD */
+.sig-pad{border:2px dashed #ddd;border-radius:10px;background:#fff;display:block;touch-action:none;cursor:crosshair}
+.sig-label{font-size:12px;color:#888;text-align:center;margin-top:6px}
+
+/* PHOTO */
+.photo-preview{width:100%;border-radius:10px;object-fit:cover;display:none}
+.photo-placeholder{border:1px solid #e0e0e0;border-radius:10px;padding:20px;text-align:center;color:#888;font-size:13px;cursor:pointer;background:#fafafa}
+
+/* REASON SELECT */
+.reason-opt{padding:10px 14px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;cursor:pointer;margin-bottom:6px;background:#fff}
+.reason-opt.selected{border-color:#e53935;background:#fce4e4;color:#c62828;font-weight:500}
+
+/* MODAL */
+.modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:1.25rem;width:100%;max-width:500px;margin:auto}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #f0f0ee}
+.modal-btns{display:flex;gap:8px;margin-top:16px}
+.modal-btns button{flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:500;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* SYNC BAR */
+.sync-bar{font-size:11px;padding:7px 12px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sync-ok{background:#e8f5e9;color:#1b5e20}
+.sync-err{background:#fce4e4;color:#c62828}
+.sync-loading{background:#e3f2fd;color:#0d47a1}
+.sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:currentColor}
+
+.empty{font-size:13px;color:#aaa;padding:20px 0;text-align:center}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+@media(max-width:600px){
+  .row2,.row3{grid-template-columns:1fr 1fr}
+  .sum-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ROLE SELECTION -->
+<div class="screen active" id="scr-role">
+  <div class="pin-wrap">
+    <div class="pin-logo" style="background:#534AB7">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3"/><rect x="9" y="11" width="14" height="10" rx="1"/><circle cx="12" cy="16" r="1"/></svg>
+    </div>
+    <div class="pin-title">Delivery Management</div>
+    <div class="pin-sub">Select your role to continue</div>
+    <div class="role-btns">
+      <div class="role-btn" id="role-admin" onclick="selectRole('admin')">
+        <div style="font-size:18px;margin-bottom:4px">👤</div>
+        <div style="font-weight:600">Admin</div>
+        <div style="font-size:11px;color:#888">Manage deliveries</div>
+      </div>
+      <div class="role-btn" id="role-warehouse" onclick="selectRole('warehouse')">
+        <div style="font-size:18px;margin-bottom:4px">📦</div>
+        <div style="font-weight:600">Warehouse</div>
+        <div style="font-size:11px;color:#888">Pick and pack</div>
+      </div>
+      <div class="role-btn" id="role-driver" onclick="selectRole('driver')">
+        <div style="font-size:18px;margin-bottom:4px">🚚</div>
+        <div style="font-weight:600">Driver</div>
+        <div style="font-size:11px;color:#888">Deliver orders</div>
+      </div>
+    </div>
+    <div class="pin-err" id="role-err"></div>
+  </div>
+</div>
+
+<!-- PIN SCREEN -->
+<div class="screen" id="scr-pin">
+  <div class="pin-wrap">
+    <div class="pin-logo" id="pin-logo" style="background:#534AB7">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    </div>
+    <div class="pin-title" id="pin-title">Enter PIN</div>
+    <div class="pin-sub" id="pin-sub">Enter your 4-digit PIN</div>
+    <input class="pin-field" id="pin-field" type="password" inputmode="numeric" maxlength="4" placeholder="****"/>
+    <div class="pin-err" id="pin-err"></div>
+    <button class="pin-btn" id="pin-btn" style="background:#534AB7">Enter</button>
+    <div style="font-size:12px;color:#aaa;cursor:pointer;margin-top:16px;text-decoration:underline" onclick="showRole()">Back</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- ADMIN SCREEN -->
+<!-- ═══════════════════════════════════════ -->
+<div class="screen" id="scr-admin">
+  <div class="topbar">
+    <div class="top-left">
+      <div class="top-logo" style="background:#534AB7">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </div>
+      <span class="top-title">Delivery Admin</span>
+    </div>
+    <div style="display:flex;align-items:center">
+      <span class="user-badge" style="background:#ede7ff;color:#4527a0">Admin</span>
+      <button class="logout-btn" onclick="showRole()">Sign out</button>
+    </div>
+  </div>
+  <div id="admin-sync" class="sync-bar sync-ok"><div class="sync-dot"></div><span id="admin-sync-msg">Connected</span></div>
+  <div class="tabs">
+    <button class="tab active" onclick="adminTab('upload')">Upload</button>
+    <button class="tab" onclick="adminTab('assign')">Assign</button>
+    <button class="tab" onclick="adminTab('live')">Live</button>
+    <button class="tab" onclick="adminTab('proof')">Proof</button>
+    <button class="tab" onclick="adminTab('eod')">End of Day</button>
+  </div>
+
+  <!-- UPLOAD TAB -->
+  <div class="panel active" id="apanel-upload">
+    <div class="card">
+      <div class="sec-label">Upload today's invoices from QB Excel</div>
+      <div class="upload-box" onclick="document.getElementById('excel-input').click()">
+        <div class="upload-icon">📄</div>
+        <div class="upload-title">Click to select Excel file</div>
+        <div class="upload-sub">Export from QB Desktop — Date, Invoice#, Customer, Amount</div>
+      </div>
+      <input type="file" id="excel-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleExcelUpload(this)"/>
+      <div id="upload-progress" style="display:none;margin-top:10px">
+        <div style="font-size:13px;font-weight:500;margin-bottom:6px" id="upload-status">Reading file...</div>
+        <div style="background:#e0e0e0;border-radius:8px;height:8px;overflow:hidden">
+          <div id="upload-bar" style="height:100%;background:#2CA01C;border-radius:8px;width:0%;transition:width .3s"></div>
+        </div>
+      </div>
+      <div id="upload-result" style="display:none;margin-top:10px;padding:12px;background:#e8f5e9;border-radius:10px;border:1px solid #c8e6c9">
+        <div style="font-size:13px;font-weight:600;color:#1b5e20" id="upload-result-text"></div>
+      </div>
+    </div>
+    <div class="card" id="upload-history-card">
+      <div class="sec-label">Previous uploads</div>
+      <div id="upload-history"><div class="empty">No uploads yet</div></div>
+    </div>
+  </div>
+
+  <!-- ASSIGN TAB -->
+  <div class="panel" id="apanel-assign">
+    <div class="card">
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <input type="text" id="assign-search" placeholder="Search invoice or customer..." style="flex:1;min-width:120px"/>
+        <select id="assign-filter" style="width:120px">
+          <option value="">All status</option>
+          <option value="new">New</option>
+          <option value="assigned">Assigned</option>
+          <option value="hold">Hold</option>
+          <option value="carry">Carry over</option>
+        </select>
+      </div>
+      <div class="sum-grid" id="assign-summary"></div>
+      <div id="assign-list"><div class="empty">Upload invoices first</div></div>
+    </div>
+  </div>
+
+  <!-- LIVE TAB -->
+  <div class="panel" id="apanel-live">
+    <div class="card">
+      <div class="sec-label">All drivers — live</div>
+      <div class="sum-grid" id="live-summary"></div>
+      <div id="live-drivers"><div class="empty">No active deliveries</div></div>
+    </div>
+  </div>
+
+  <!-- PROOF TAB -->
+  <div class="panel" id="apanel-proof">
+    <div class="card">
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input type="text" id="proof-search" placeholder="Search invoice or customer..." style="flex:1"/>
+        <input type="date" id="proof-date" style="width:140px"/>
+      </div>
+      <div id="proof-list"><div class="empty">No delivered invoices yet</div></div>
+    </div>
+  </div>
+
+  <!-- END OF DAY TAB -->
+  <div class="panel" id="apanel-eod">
+    <div class="card">
+      <div class="sec-label">End of day summary</div>
+      <div class="sum-grid" id="eod-summary"></div>
+      <div class="sec-label" style="margin-top:10px">Undelivered — decide action</div>
+      <div id="eod-list"><div class="empty">No undelivered invoices</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- WAREHOUSE SCREEN -->
+<!-- ═══════════════════════════════════════ -->
+<div class="screen" id="scr-warehouse">
+  <div class="topbar">
+    <div class="top-left">
+      <div class="top-logo" style="background:#185FA5">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/></svg>
+      </div>
+      <span class="top-title">Warehouse</span>
+    </div>
+    <div style="display:flex;align-items:center">
+      <span class="user-badge" id="wh-badge" style="background:#e3f2fd;color:#0d47a1">Warehouse</span>
+      <button class="logout-btn" onclick="showRole()">Sign out</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="whTab('pick')">Picking</button>
+    <button class="tab" onclick="whTab('done')">Completed</button>
+  </div>
+
+  <!-- PICKING TAB -->
+  <div class="panel active" id="whpanel-pick">
+    <div class="card">
+      <div class="sec-label">Select driver to pick for</div>
+      <div id="wh-driver-list"><div class="empty">No assigned deliveries yet</div></div>
+    </div>
+  </div>
+
+  <!-- COMPLETED TAB -->
+  <div class="panel" id="whpanel-done">
+    <div class="card">
+      <div class="sec-label">Completed packing</div>
+      <div id="wh-done-list"><div class="empty">Nothing packed yet</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- DRIVER SCREEN -->
+<!-- ═══════════════════════════════════════ -->
+<div class="screen" id="scr-driver">
+  <div class="topbar">
+    <div class="top-left">
+      <div class="top-logo" style="background:#e65100">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3M13 17H9m8 0h2a2 2 0 002-2v-5l-2-5H9v5"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+      </div>
+      <span class="top-title">Delivery</span>
+    </div>
+    <div style="display:flex;align-items:center">
+      <span class="user-badge" id="drv-badge" style="background:#fff3e0;color:#e65100">Driver</span>
+      <button class="logout-btn" onclick="showRole()">Sign out</button>
+    </div>
+  </div>
+
+  <!-- CONFIRM BOXES LOADED -->
+  <div id="drv-confirm-load" style="display:none">
+    <div class="card">
+      <div class="sec-label">Confirm boxes loaded before departing</div>
+      <div style="text-align:center;padding:10px 0">
+        <div style="font-size:13px;color:#888;margin-bottom:4px">Expected boxes</div>
+        <div style="font-size:36px;font-weight:600" id="drv-expected-boxes">0</div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label>Confirm actual boxes loaded</label>
+        <input type="number" id="drv-loaded-boxes" min="0" inputmode="numeric" placeholder="Enter number"/>
+      </div>
+      <button class="btn-full btn-orange" onclick="confirmLoad()">Confirm — Start delivery</button>
+    </div>
+  </div>
+
+  <!-- STOPS LIST -->
+  <div id="drv-stops-wrap" style="display:none">
+    <div class="card">
+      <div class="sec-label">My stops today</div>
+      <div id="drv-summary" class="sum-grid" style="margin-bottom:10px"></div>
+      <div id="drv-stops-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- DELIVERY CONFIRMATION MODAL -->
+<!-- ═══════════════════════════════════════ -->
+<div class="modal-bg" id="delivery-modal">
+  <div class="modal">
+    <h3 id="del-modal-title">Confirm delivery</h3>
+    <div id="del-modal-inv-info" style="background:#f8f8f6;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px"></div>
+
+    <div class="sec-label">Boxes</div>
+    <div class="box-grid" style="margin-bottom:14px">
+      <div class="box-card" style="background:#f8f8f6">
+        <div class="box-num" id="del-exp-boxes">0</div>
+        <div class="box-lbl" style="color:#888">Expected</div>
+      </div>
+      <div class="box-card" style="background:#e8f5e9;border-color:#c8e6c9">
+        <input class="box-input" id="del-delivered-boxes" type="number" min="0" inputmode="numeric" style="background:transparent;border:none;border-radius:0;height:auto;padding:0" oninput="updateReturnCount()"/>
+        <div class="box-lbl" style="color:#1b5e20">Delivered</div>
+      </div>
+      <div class="box-card" style="background:#fce4e4;border-color:#f09595">
+        <div class="box-num" id="del-return-boxes" style="color:#c62828">0</div>
+        <div class="box-lbl" style="color:#c62828">Returned</div>
+      </div>
+    </div>
+
+    <!-- RETURN REASON - shown when returns > 0 -->
+    <div id="del-return-section" style="display:none;margin-bottom:14px">
+      <div class="sec-label">Reason for return</div>
+      <div id="del-reasons">
+        <div class="reason-opt" onclick="selectReason(this,'Customer refused boxes')">Customer refused boxes</div>
+        <div class="reason-opt" onclick="selectReason(this,'Wrong items')">Wrong items</div>
+        <div class="reason-opt" onclick="selectReason(this,'Damaged boxes')">Damaged boxes</div>
+        <div class="reason-opt" onclick="selectReason(this,'Customer not home')">Customer not home</div>
+        <div class="reason-opt" onclick="selectReason(this,'Partial order accepted')">Partial order accepted</div>
+        <div class="reason-opt" onclick="selectReason(this,'other')">Other — type reason</div>
+      </div>
+      <input type="text" id="del-other-reason" placeholder="Type reason..." style="display:none;margin-top:8px"/>
+      <div class="sec-label" style="margin-top:10px">Photo of returned boxes</div>
+      <div class="photo-placeholder" onclick="takeReturnPhoto()" id="del-return-photo-btn">📷 Tap to take photo of returned boxes</div>
+      <img id="del-return-photo-preview" class="photo-preview" style="margin-top:6px"/>
+    </div>
+
+    <div class="sec-label">Delivery photo</div>
+    <div class="photo-placeholder" onclick="takeDeliveryPhoto()" id="del-photo-btn">📷 Tap to take delivery photo</div>
+    <img id="del-photo-preview" class="photo-preview" style="margin-top:6px;margin-bottom:10px"/>
+
+    <div class="sec-label" style="margin-top:14px">Payment</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <div id="pay-no" class="reason-opt selected" style="flex:1;text-align:center" onclick="selectPayment('no')">No payment</div>
+      <div id="pay-cash" class="reason-opt" style="flex:1;text-align:center" onclick="selectPayment('cash')">Cash</div>
+      <div id="pay-chq" class="reason-opt" style="flex:1;text-align:center" onclick="selectPayment('cheque')">Cheque</div>
+    </div>
+    <div id="pay-cash-row" style="display:none;margin-bottom:8px">
+      <label>Cash amount</label>
+      <input type="number" id="pay-cash-amount" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 135.58"/>
+    </div>
+    <div id="pay-chq-row" style="display:none;margin-bottom:8px">
+      <label>Cheque number</label>
+      <input type="text" id="pay-chq-num" placeholder="e.g. 00123"/>
+    </div>
+
+    <div class="sec-label" style="margin-top:14px">Item returns from customer</div>
+    <div style="margin-bottom:8px">
+      <div style="display:flex;gap:8px;margin-bottom:6px">
+        <div id="ret-no-btn" class="reason-opt selected" style="flex:1;text-align:center" onclick="selectItemReturn('no')">No returns</div>
+        <div id="ret-yes-btn" class="reason-opt" style="flex:1;text-align:center" onclick="selectItemReturn('yes')">Has returns</div>
+      </div>
+      <div id="item-return-section" style="display:none">
+        <div class="photo-placeholder" onclick="takeItemReturnPhoto()" id="item-return-photo-btn">📷 Take photo of returned items</div>
+        <img id="item-return-photo-preview" class="photo-preview" style="margin-top:6px"/>
+      </div>
+    </div>
+
+    <div class="sec-label" style="margin-top:14px">Customer signature</div>
+    <div style="margin-bottom:8px"><label style="font-size:12px;color:#888;display:block;margin-bottom:4px">Signer name <span style="color:#aaa;font-size:11px">(optional)</span></label><input type="text" id="del-signer-name" placeholder="e.g. John Smith" style="height:42px"/></div>
+    <canvas id="sig-canvas" class="sig-pad" width="460" height="120"></canvas>
+    <div style="display:flex;justify-content:flex-end;margin-top:4px">
+      <button class="btn btn-out" style="font-size:11px;padding:4px 10px" onclick="clearSig()">Clear signature</button>
+    </div>
+    <div class="sig-label">Ask customer to sign above</div>
+
+    <div class="modal-btns">
+      <button style="background:#f0f0ee;color:#555" onclick="closeDeliveryModal()">Cancel</button>
+      <button style="background:#2CA01C;color:white" onclick="confirmDelivery()">Confirm delivered</button>
+    </div>
+  </div>
+</div>
+
+<!-- ASSIGN MODAL -->
+<div class="modal-bg" id="assign-modal">
+  <div class="modal">
+    <h3 id="assign-modal-title">Assign invoice</h3>
+    <div id="assign-modal-inv-info" style="background:#f8f8f6;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px"></div>
+    <div style="margin-bottom:12px">
+      <label>Assign to driver</label>
+      <select id="assign-driver-sel">
+        <option value="">Select driver...</option>
+        <option value="hold">Hold — do not deliver today</option>
+      </select>
+    </div>
+    <div id="assign-stop-row" style="margin-bottom:12px;display:none">
+      <label>Stop number</label>
+      <input type="number" id="assign-stop-num" min="1" inputmode="numeric" placeholder="e.g. 3"/>
+    </div>
+    <div style="margin-bottom:12px">
+      <label>Estimated boxes</label>
+      <input type="number" id="assign-boxes" min="1" inputmode="numeric" placeholder="e.g. 4"/>
+    </div>
+    <div class="modal-btns">
+      <button style="background:#f0f0ee;color:#555" onclick="closeAssignModal()">Cancel</button>
+      <button style="background:#534AB7;color:white" onclick="saveAssignment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROOF DETAIL MODAL -->
+<div class="modal-bg" id="proof-modal">
+  <div class="modal">
+    <h3 id="proof-modal-title">Delivery proof</h3>
+    <div id="proof-modal-body"></div>
+    <div class="modal-btns">
+      <button style="background:#f0f0ee;color:#555" onclick="document.getElementById('proof-modal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyBxj8lQU1MTs7DZp8hZfTm3Aw5ACIt3psE",
+  authDomain:"order-entry-test.firebaseapp.com",
+  projectId:"order-entry-test",
+  storageBucket:"order-entry-test.firebasestorage.app",
+  messagingSenderId:"714889227872",
+  appId:"1:714889227872:web:fe395f536a87872d8a1d05"
+});
+var db=firebase.firestore();
+var storage=firebase.storage();
+
+// STATE
+var currentRole=null,currentUser=null;
+var INVOICES=[],DRIVERS={},WAREHOUSE_USERS={};
+var currentInvoice=null,sigCanvas=null,sigCtx=null,isDrawing=false;
+var deliveryPhotoData=null,returnPhotoData=null,selectedReason=null;
+var itemReturnPhotoData=null,paymentType='no',hasItemReturn=false;
+var driverUnsub=null,adminUnsub=null;
+
+// UTILS
+function G(id){return document.getElementById(id);}
+function toast(m){var t=G('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});G(id).classList.add('active');}
+function fmtDate(d){if(!d)return '';try{return new Date(d+'T12:00:00').toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}}
+function fmtTime(ts){if(!ts)return '';try{var d=new Date(ts);return d.toLocaleDateString('en-CA',{month:'short',day:'numeric'})+' at '+d.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+function today(){return new Date().toISOString().split('T')[0];}
+
+// ROLE SELECTION
+function showRole(){
+  currentRole=null;currentUser=null;
+  document.querySelectorAll('.role-btn').forEach(function(b){b.classList.remove('active');});
+  showScreen('scr-role');
+}
+function selectRole(role){
+  currentRole=role;
+  document.querySelectorAll('.role-btn').forEach(function(b){b.classList.remove('active');});
+  G('role-'+role).classList.add('active');
+  var colors={admin:'#534AB7',warehouse:'#185FA5',driver:'#e65100'};
+  var titles={admin:'Admin Login',warehouse:'Warehouse Login',driver:'Driver Login'};
+  G('pin-logo').style.background=colors[role];
+  G('pin-title').textContent=titles[role];
+  G('pin-field').value='';G('pin-err').textContent='';
+  showScreen('scr-pin');
+  setTimeout(function(){G('pin-field').focus();},100);
+}
+
+// PIN CHECK
+function doCheckPin(){
+  var pin=G('pin-field').value.trim();
+  if(pin.length!==4){G('pin-err').textContent='Please enter 4 digits';return;}
+  G('pin-err').textContent='Checking...';
+  console.log('Checking PIN:', pin, 'Role:', currentRole);
+  // Query ALL delivery_users and check manually
+  db.collection('delivery_users').get().then(function(snap){
+    console.log('Total users found:', snap.size);
+    var user=null;
+    snap.forEach(function(d){
+      var u=d.data();
+      console.log('User:', u.name, 'role:', u.role, 'pin:', u.pin, 'pin type:', typeof u.pin);
+      if(String(u.pin)===String(pin) && u.role===currentRole){
+        user=d.data();user.id=d.id;
+      }
+    });
+    if(!user){
+      G('pin-err').textContent='Wrong PIN — try again';
+      G('pin-field').value='';
+      return;
+    }
+    currentUser=user;
+    if(currentRole==='admin') showAdminScreen();
+    else if(currentRole==='warehouse') showWarehouseScreen();
+    else if(currentRole==='driver') showDriverScreen();
+  }).catch(function(e){
+    G('pin-err').textContent='Connection error — check internet';
+    console.error(e);
+  });
+}
+
+// ═══════════════════════════════
+// ADMIN
+// ═══════════════════════════════
+function showAdminScreen(){
+  showScreen('scr-admin');
+  loadDeliveryUsers();
+  adminTab('upload');
+  startAdminListener();
+}
+
+function adminTab(name){
+  document.querySelectorAll('#scr-admin .tab').forEach(function(t,i){
+    var names=['upload','assign','live','proof','eod'];
+    t.classList.toggle('active',names[i]===name);
+  });
+  document.querySelectorAll('#scr-admin .panel').forEach(function(p){p.classList.remove('active');});
+  G('apanel-'+name).classList.add('active');
+  if(name==='assign')renderAssignList();
+  if(name==='live')renderLive();
+  if(name==='proof')renderProofList();
+  if(name==='eod')renderEOD();
+  if(name==='upload')renderUploadHistory();
+}
+
+function loadDeliveryUsers(){
+  db.collection('delivery_users').get().then(function(snap){
+    DRIVERS={};WAREHOUSE_USERS={};
+    snap.forEach(function(d){
+      var u=d.data();u.id=d.id;
+      if(u.role==='driver')DRIVERS[u.id]=u;
+      if(u.role==='warehouse')WAREHOUSE_USERS[u.id]=u;
+    });
+    updateDriverSelect();
+  });
+}
+
+function updateDriverSelect(){
+  var sel=G('assign-driver-sel');
+  var val=sel.value;
+  sel.innerHTML='<option value="">Select driver...</option><option value="hold">Hold — do not deliver today</option>';
+  Object.values(DRIVERS).forEach(function(d){
+    sel.innerHTML+='<option value="'+d.id+'">'+d.name+'</option>';
+  });
+  if(val)sel.value=val;
+}
+
+function startAdminListener(){
+  if(adminUnsub){try{adminUnsub();}catch(e){}}
+  adminUnsub=db.collection('delivery_invoices').onSnapshot(function(snap){
+    INVOICES=[];snap.forEach(function(d){var o=d.data();o.id=d.id;INVOICES.push(o);});
+    var activePanel=document.querySelector('#scr-admin .panel.active');
+    if(activePanel){
+      var id=activePanel.id.replace('apanel-','');
+      if(id==='assign')renderAssignList();
+      if(id==='live')renderLive();
+      if(id==='proof')renderProofList();
+      if(id==='eod')renderEOD();
+    }
+  });
+}
+
+// EXCEL UPLOAD
+function handleExcelUpload(input){
+  var file=input.files[0];if(!file)return;
+  G('upload-progress').style.display='block';
+  G('upload-result').style.display='none';
+  G('upload-status').textContent='Reading file...';
+  G('upload-bar').style.width='20%';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      G('upload-bar').style.width='50%';
+      G('upload-status').textContent='Processing invoices...';
+      var data=new Uint8Array(e.target.result);
+      var wb=XLSX.read(data,{type:'array'});
+      var ws=wb.Sheets['Sheet1']||wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      var invoices=[];
+      var uploadDate=today();
+      rows.forEach(function(row){
+        var num=row[2],customer=row[3],amount=row[4];
+        if(num&&customer&&amount&&!isNaN(parseFloat(amount))&&String(num).length>3){
+          invoices.push({
+            num:String(num).trim(),
+            customer:String(customer).trim(),
+            amount:parseFloat(amount),
+            uploadDate:uploadDate,
+            status:'new',
+            driverId:'',
+            driverName:'',
+            stopNum:0,
+            estBoxes:0,
+            actualBoxes:0,
+            deliveredBoxes:0,
+            returnedBoxes:0,
+            returnReason:'',
+            ts:Date.now()
+          });
+        }
+      });
+      if(!invoices.length){toast('No valid invoices found in file');G('upload-progress').style.display='none';return;}
+      G('upload-bar').style.width='70%';
+      G('upload-status').textContent='Uploading '+invoices.length+' invoices...';
+      // Check for carry-overs
+      var existingNums={};
+      INVOICES.forEach(function(inv){
+        if(inv.status!=='delivered')existingNums[inv.num]=true;
+      });
+      var newCount=0;var batch=db.batch();
+      invoices.forEach(function(inv){
+        if(!existingNums[inv.num]){
+          var ref=db.collection('delivery_invoices').doc(inv.num);
+          batch.set(ref,inv);newCount++;
+        }
+      });
+      batch.commit().then(function(){
+        G('upload-bar').style.width='100%';
+        G('upload-status').textContent='Done!';
+        G('upload-result').style.display='block';
+        G('upload-result-text').textContent=newCount+' new invoices uploaded. '+invoices.length+' total in file.';
+        // Save upload log
+        db.collection('upload_logs').add({date:uploadDate,count:invoices.length,newCount:newCount,ts:Date.now()});
+        setTimeout(function(){renderUploadHistory();},500);
+        toast(newCount+' invoices uploaded!');
+      }).catch(function(e){toast('Upload error: '+e.message);G('upload-progress').style.display='none';});
+    }catch(e){toast('Error reading file: '+e.message);G('upload-progress').style.display='none';}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderUploadHistory(){
+  db.collection('upload_logs').orderBy('ts','desc').limit(5).get().then(function(snap){
+    if(snap.empty){G('upload-history').innerHTML='<div class="empty">No uploads yet</div>';return;}
+    G('upload-history').innerHTML=snap.docs.map(function(d){
+      var u=d.data();
+      return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0ee;font-size:12px">'+
+        '<span>'+fmtDate(u.date)+'</span><span style="color:#888">'+u.count+' invoices ('+u.newCount+' new)</span></div>';
+    }).join('');
+  });
+}
+
+// ASSIGN
+function renderAssignList(){
+  var q=(G('assign-search').value||'').toLowerCase();
+  var f=G('assign-filter').value;
+  var list=INVOICES.filter(function(inv){
+    return(!q||(inv.num+inv.customer).toLowerCase().includes(q))&&(!f||inv.status===f);
+  });
+  // Summary
+  var counts={new:0,assigned:0,hold:0,carry:0};
+  INVOICES.forEach(function(inv){if(counts[inv.status]!==undefined)counts[inv.status]++;else if(inv.uploadDate!==today())counts.carry++;});
+  G('assign-summary').innerHTML=
+    '<div class="sum-card"><div class="sum-num">'+INVOICES.filter(function(i){return i.status==='new';}).length+'</div><div class="sum-lbl">New</div></div>'+
+    '<div class="sum-card"><div class="sum-num" style="color:#4527a0">'+INVOICES.filter(function(i){return i.status==='assigned';}).length+'</div><div class="sum-lbl">Assigned</div></div>'+
+    '<div class="sum-card"><div class="sum-num" style="color:#e65100">'+INVOICES.filter(function(i){return i.status==='hold';}).length+'</div><div class="sum-lbl">Hold</div></div>'+
+    '<div class="sum-card"><div class="sum-num" style="color:#c62828">'+INVOICES.filter(function(i){return i.status==='carry';}).length+'</div><div class="sum-lbl">Carry over</div></div>';
+  if(!list.length){G('assign-list').innerHTML='<div class="empty">No invoices found</div>';return;}
+  G('assign-list').innerHTML=list.map(function(inv){
+    var tagClass={new:'tag-new',assigned:'tag-assigned',hold:'tag-hold',carry:'tag-carry',packed:'tag-packed',delivering:'tag-delivering',delivered:'tag-done'}[inv.status]||'tag-new';
+    var tagText=inv.status==='assigned'?(inv.driverName||'Assigned'):inv.status.charAt(0).toUpperCase()+inv.status.slice(1);
+    return '<div class="inv-row" onclick="openAssignModal(\''+inv.id+'\')">'+
+      '<div class="inv-info">'+
+        '<div class="inv-num">'+inv.num+'</div>'+
+        '<div class="inv-name">'+inv.customer+'</div>'+
+        '<div class="inv-meta">'+(inv.estBoxes?inv.estBoxes+' boxes est.':'')+(inv.uploadDate!==today()?' · Carry over from '+fmtDate(inv.uploadDate):'')+'</div>'+
+      '</div>'+
+      '<div style="text-align:right">'+
+        '<div class="inv-amt">$'+inv.amount.toFixed(2)+'</div>'+
+        '<div class="tag '+tagClass+'" style="margin-top:4px">'+tagText+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function openAssignModal(invId){
+  var inv=INVOICES.find(function(i){return i.id===invId;});if(!inv)return;
+  currentInvoice=inv;
+  G('assign-modal-title').textContent='Assign — '+inv.num;
+  G('assign-modal-inv-info').innerHTML='<b>'+inv.customer+'</b><br>Amount: $'+inv.amount.toFixed(2)+(inv.uploadDate!==today()?'<br><span style="color:#c62828">Carry over from '+fmtDate(inv.uploadDate)+'</span>':'');
+  updateDriverSelect();
+  G('assign-driver-sel').value=inv.driverId||'';
+  G('assign-stop-num').value=inv.stopNum||'';
+  G('assign-boxes').value=inv.estBoxes||'';
+  G('assign-stop-row').style.display=inv.driverId&&inv.driverId!=='hold'?'block':'none';
+  G('assign-modal').classList.add('open');
+}
+function closeAssignModal(){G('assign-modal').classList.remove('open');}
+
+G('assign-driver-sel').addEventListener('change',function(){
+  G('assign-stop-row').style.display=this.value&&this.value!=='hold'?'block':'none';
+});
+
+function saveAssignment(){
+  var inv=currentInvoice;if(!inv)return;
+  var driverId=G('assign-driver-sel').value;
+  var stopNum=parseInt(G('assign-stop-num').value)||0;
+  var estBoxes=parseInt(G('assign-boxes').value)||0;
+  var driverName='';
+  if(driverId&&driverId!=='hold'&&DRIVERS[driverId])driverName=DRIVERS[driverId].name;
+  var status=driverId==='hold'?'hold':driverId?'assigned':'new';
+  db.collection('delivery_invoices').doc(inv.id).update({
+    status:status,driverId:driverId==='hold'?'':driverId,driverName:driverName,
+    stopNum:stopNum,estBoxes:estBoxes
+  }).then(function(){closeAssignModal();toast('Saved!');}).catch(function(e){toast('Error: '+e.message);});
+}
+
+// LIVE
+function renderLive(){
+  var delivering=INVOICES.filter(function(i){return['assigned','packed','ready','delivering'].includes(i.status);});
+  var delivered=INVOICES.filter(function(i){return i.status==='delivered';});
+  G('live-summary').innerHTML=
+    '<div class="sum-card"><div class="sum-num" style="color:#1b5e20">'+delivered.length+'</div><div class="sum-lbl">Delivered</div></div>'+
+    '<div class="sum-card"><div class="sum-num" style="color:#0d47a1">'+delivering.length+'</div><div class="sum-lbl">On route</div></div>';
+  // Group by driver
+  var byDriver={};
+  INVOICES.filter(function(i){return i.driverId&&i.driverId!=='hold';}).forEach(function(inv){
+    if(!byDriver[inv.driverId])byDriver[inv.driverId]={driver:DRIVERS[inv.driverId],invoices:[]};
+    byDriver[inv.driverId].invoices.push(inv);
+  });
+  if(!Object.keys(byDriver).length){G('live-drivers').innerHTML='<div class="empty">No assigned deliveries</div>';return;}
+  var driverColors=['#1b5e20','#0d47a1','#e65100','#c62828','#4527a0'];
+  G('live-drivers').innerHTML=Object.values(byDriver).map(function(d,idx){
+    var total=d.invoices.length;
+    var done=d.invoices.filter(function(i){return i.status==='delivered';}).length;
+    var returns=d.invoices.filter(function(i){return i.returnedBoxes>0;}).length;
+    var pct=total?Math.round(done/total*100):0;
+    var name=d.driver?d.driver.name:'Driver '+(idx+1);
+    var col=driverColors[idx%driverColors.length];
+    return '<div class="driver-card">'+
+      '<div class="driver-top">'+
+        '<div class="driver-av" style="background:#f0f0ee;color:'+col+'">'+name.charAt(0).toUpperCase()+'</div>'+
+        '<div style="flex:1">'+
+          '<div class="driver-name">'+name+'</div>'+
+          '<div class="driver-stops">'+done+' of '+total+' stops done'+(returns?' · '+returns+' return(s)':'')+'</div>'+
+        '</div>'+
+        '<div class="tag '+(done===total&&total>0?'tag-done':'tag-new')+'">'+(done===total&&total>0?'Done':'On route')+'</div>'+
+      '</div>'+
+      '<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>'+
+    '</div>';
+  }).join('');
+}
+
+// PROOF
+function renderProofList(){
+  var q=(G('proof-search').value||'').toLowerCase();
+  var d=G('proof-date').value;
+  var list=INVOICES.filter(function(i){
+    return i.status==='delivered'&&(!q||(i.num+i.customer).toLowerCase().includes(q))&&(!d||i.deliveredAt&&i.deliveredAt.startsWith(d));
+  });
+  if(!list.length){G('proof-list').innerHTML='<div class="empty">No delivered invoices yet</div>';return;}
+  G('proof-list').innerHTML=list.map(function(inv){
+    return '<div class="inv-row" onclick="openProofModal(\''+inv.id+'\')">'+
+      '<div class="inv-info">'+
+        '<div class="inv-num">'+inv.num+'</div>'+
+        '<div class="inv-name">'+inv.customer+'</div>'+
+        '<div class="inv-meta">'+(inv.driverName||'')+(inv.deliveredAt?' · '+fmtTime(new Date(inv.deliveredAt).getTime()):'')+'</div>'+
+      '</div>'+
+      '<div style="text-align:right">'+
+        '<div class="inv-amt">$'+inv.amount.toFixed(2)+'</div>'+
+        '<div class="tag '+(inv.returnedBoxes>0?'tag-partial':'tag-done')+'" style="margin-top:4px">'+(inv.returnedBoxes>0?inv.returnedBoxes+' returned':'Delivered')+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function openProofModal(invId){
+  var inv=INVOICES.find(function(i){return i.id===invId;});if(!inv)return;
+  G('proof-modal-title').textContent='Proof — '+inv.num;
+  var html='<div style="background:#f8f8f6;border-radius:10px;padding:12px;margin-bottom:12px">'+
+    '<div style="font-size:14px;font-weight:600;margin-bottom:4px">'+inv.customer+'</div>'+
+    '<div style="font-size:12px;color:#888;margin-bottom:10px">$'+inv.amount.toFixed(2)+'</div>'+
+    '<div style="font-size:12px;display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#888">Driver</span><span style="font-weight:500">'+(inv.driverName||'-')+'</span></div>'+
+    '<div style="font-size:12px;display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#888">Signed by</span><span style="font-weight:500">'+(inv.signerName||'—')+'</span></div>'+
+    '<div style="font-size:12px;display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#888">Delivered at</span><span style="font-weight:500">'+(inv.deliveredAt?fmtTime(new Date(inv.deliveredAt).getTime()):'-')+'</span></div>'+
+    '<div style="font-size:12px;display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#888">Boxes expected</span><span style="font-weight:500">'+(inv.actualBoxes||inv.estBoxes||0)+'</span></div>'+
+    '<div style="font-size:12px;display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#888">Boxes delivered</span><span style="font-weight:500;color:#1b5e20">'+(inv.deliveredBoxes||0)+'</span></div>'+
+    (inv.returnedBoxes>0?'<div style="font-size:12px;display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#888">Boxes returned</span><span style="font-weight:500;color:#c62828">'+inv.returnedBoxes+' — '+inv.returnReason+'</span></div>':'')+
+    '<div style="font-size:12px;display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#888">Payment</span><span style="font-weight:500;color:'+(inv.paymentType==='no'?'#888':'#1b5e20')+'">'+
+      (inv.paymentType==='cash'?'Cash — $'+(inv.paymentAmount||0).toFixed(2):inv.paymentType==='cheque'?'Cheque #'+(inv.paymentChequeNum||''):'No payment')+
+    '</span></div>'+
+    (inv.hasItemReturn?'<div style="font-size:12px;display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#888">Item return</span><span style="font-weight:500;color:#c62828">Yes — see photo</span></div>':'')+
+    '</div>';
+  if(inv.deliveryPhoto)html+='<div style="margin-bottom:8px"><div style="font-size:11px;color:#888;margin-bottom:4px">Delivery photo</div><img src="'+inv.deliveryPhoto+'" style="width:100%;border-radius:8px"/></div>';
+  if(inv.returnPhoto)html+='<div style="margin-bottom:8px"><div style="font-size:11px;color:#888;margin-bottom:4px">Box return photo</div><img src="'+inv.returnPhoto+'" style="width:100%;border-radius:8px"/></div>';
+  if(inv.itemReturnPhoto)html+='<div style="margin-bottom:8px"><div style="font-size:11px;color:#888;margin-bottom:4px;color:#c62828;font-weight:500">Item return photo</div><img src="'+inv.itemReturnPhoto+'" style="width:100%;border-radius:8px;border:2px solid #fce4e4"/></div>';
+  if(inv.signature)html+='<div style="margin-bottom:8px"><div style="font-size:11px;color:#888;margin-bottom:4px">Customer signature</div><img src="'+inv.signature+'" style="width:100%;border-radius:8px;background:#fff;border:1px solid #e0e0e0"/></div>';
+  G('proof-modal-body').innerHTML=html;
+  G('proof-modal').classList.add('open');
+}
+
+// EOD
+function renderEOD(){
+  var delivered=INVOICES.filter(function(i){return i.status==='delivered';});
+  var undelivered=INVOICES.filter(function(i){return['new','assigned','packed','ready','delivering'].includes(i.status)&&i.driverId&&i.driverId!=='hold';});
+  var returns=INVOICES.filter(function(i){return i.returnedBoxes>0;});
+  var holds=INVOICES.filter(function(i){return i.status==='hold';});
+  G('eod-summary').innerHTML=
+    '<div class="sum-card"><div class="sum-num" style="color:#1b5e20">'+delivered.length+'</div><div class="sum-lbl">Delivered</div></div>'+
+    '<div class="sum-card"><div class="sum-num" style="color:#c62828">'+undelivered.length+'</div><div class="sum-lbl">Not delivered</div></div>'+
+    '<div class="sum-card"><div class="sum-num" style="color:#e65100">'+returns.length+'</div><div class="sum-lbl">Returns</div></div>'+
+    '<div class="sum-card"><div class="sum-num" style="color:#0d47a1">'+holds.length+'</div><div class="sum-lbl">Hold</div></div>';
+  var undelList=INVOICES.filter(function(i){return i.status!=='delivered'&&i.status!=='hold'&&i.driverId;});
+  if(!undelList.length){G('eod-list').innerHTML='<div class="empty">All invoices delivered!</div>';return;}
+  G('eod-list').innerHTML=undelList.map(function(inv){
+    return '<div class="inv-row">'+
+      '<div class="inv-info">'+
+        '<div class="inv-num">'+inv.num+'</div>'+
+        '<div class="inv-name">'+inv.customer+'</div>'+
+        '<div class="inv-meta">$'+inv.amount.toFixed(2)+(inv.driverName?' · '+inv.driverName:'')+'</div>'+
+      '</div>'+
+      '<div style="display:flex;flex-direction:column;gap:4px">'+
+        '<div class="tag tag-new" style="cursor:pointer" onclick="eodAction(\''+inv.id+'\',\'carry\')">Tomorrow</div>'+
+        '<div class="tag tag-hold" style="cursor:pointer" onclick="eodAction(\''+inv.id+'\',\'hold\')">Hold</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function eodAction(invId,action){
+  db.collection('delivery_invoices').doc(invId).update({status:action==='carry'?'carry':'hold',driverId:'',driverName:'',stopNum:0})
+    .then(function(){toast(action==='carry'?'Added to tomorrow':'Marked as hold');})
+    .catch(function(e){toast('Error: '+e.message);});
+}
+
+// ═══════════════════════════════
+// WAREHOUSE
+// ═══════════════════════════════
+function showWarehouseScreen(){
+  G('wh-badge').textContent=currentUser.name;
+  showScreen('scr-warehouse');
+  whTab('pick');
+  startWarehouseListener();
+}
+function whTab(name){
+  document.querySelectorAll('#scr-warehouse .tab').forEach(function(t,i){
+    t.classList.toggle('active',['pick','done'][i]===name);
+  });
+  G('whpanel-pick').classList.toggle('active',name==='pick');
+  G('whpanel-done').classList.toggle('active',name==='done');
+  if(name==='pick')renderWhPick();
+  if(name==='done')renderWhDone();
+}
+var whUnsub=null;
+function startWarehouseListener(){
+  if(whUnsub){try{whUnsub();}catch(e){}}
+  whUnsub=db.collection('delivery_invoices').onSnapshot(function(snap){
+    INVOICES=[];snap.forEach(function(d){var o=d.data();o.id=d.id;INVOICES.push(o);});
+    var activeTab=document.querySelector('#scr-warehouse .tab.active');
+    if(activeTab&&activeTab.textContent.trim()==='Picking')renderWhPick();
+    else renderWhDone();
+  });
+}
+function renderWhPick(){
+  var assigned=INVOICES.filter(function(i){return i.status==='assigned';});
+  // Group by driver
+  var byDriver={};
+  assigned.forEach(function(inv){
+    if(!byDriver[inv.driverId])byDriver[inv.driverId]={name:inv.driverName||inv.driverId,invoices:[]};
+    byDriver[inv.driverId].invoices.push(inv);
+  });
+  if(!Object.keys(byDriver).length){G('wh-driver-list').innerHTML='<div class="empty">No invoices to pick yet</div>';return;}
+  G('wh-driver-list').innerHTML=Object.entries(byDriver).map(function(entry){
+    var dId=entry[0],d=entry[1];
+    var packed=d.invoices.filter(function(i){return i.status==='packed';}).length;
+    return '<div class="driver-card" onclick="openWhDriver(\''+dId+'\')">'+
+      '<div class="driver-top">'+
+        '<div class="driver-av" style="background:#e3f2fd;color:#0d47a1">'+d.name.charAt(0).toUpperCase()+'</div>'+
+        '<div style="flex:1"><div class="driver-name">'+d.name+'</div><div class="driver-stops">'+d.invoices.length+' stops · '+packed+' packed</div></div>'+
+        '<div class="tag '+(packed===d.invoices.length?'tag-ready':'tag-new')+'">'+(packed===d.invoices.length?'Ready':'Picking')+'</div>'+
+      '</div>'+
+      '<div class="progress-bar"><div class="progress-fill" style="width:'+(d.invoices.length?Math.round(packed/d.invoices.length*100):0)+'%"></div></div>'+
+    '</div>';
+  }).join('');
+}
+
+var currentWhDriver=null;
+function openWhDriver(dId){
+  currentWhDriver=dId;
+  var invs=INVOICES.filter(function(i){return i.driverId===dId;}).sort(function(a,b){return a.stopNum-b.stopNum;});
+  var dName=invs[0]?invs[0].driverName:'Driver';
+  G('wh-driver-list').innerHTML=
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
+      '<button class="btn btn-out" onclick="renderWhPick()" style="font-size:12px">← Back</button>'+
+      '<div style="font-size:14px;font-weight:600">'+dName+'</div>'+
+    '</div>'+
+    invs.map(function(inv){
+      var isPacked=inv.status==='packed'||inv.status==='ready'||inv.status==='delivering'||inv.status==='delivered';
+      return '<div style="padding:12px;border:1px solid #e0e0e0;border-radius:10px;margin-bottom:8px;background:'+(isPacked?'#f8fdf8':'#fff')+'">'+
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:'+(isPacked?'0':'8px')+'">'+
+          '<div class="stop-num '+(isPacked?'stop-num-done':'stop-num-active')+'">'+(isPacked?'✓':inv.stopNum||'?')+'</div>'+
+          '<div style="flex:1">'+
+            '<div style="font-size:13px;font-weight:500">'+inv.customer+'</div>'+
+            '<div style="font-size:11px;color:#888">Inv '+inv.num+' · $'+inv.amount.toFixed(2)+'</div>'+
+          '</div>'+
+          '<div class="tag '+(isPacked?'tag-packed':'tag-new')+'">'+(isPacked?'Packed':'Pack')+'</div>'+
+        '</div>'+
+        (!isPacked?
+          '<div style="display:flex;gap:8px;align-items:center">'+
+            '<div style="flex:1"><label style="font-size:11px">Actual boxes</label>'+
+            '<input type="number" id="wh-boxes-'+inv.id+'" value="'+(inv.estBoxes||'')+'" placeholder="Est: '+(inv.estBoxes||'?')+'" min="1" inputmode="numeric" style="height:38px"/></div>'+
+            '<button class="btn btn-green" style="margin-top:18px;padding:8px 12px;font-size:12px" onclick="markPacked(\''+inv.id+'\')">Mark packed</button>'+
+          '</div>'
+        :
+          '<div style="font-size:11px;color:#1b5e20">'+inv.actualBoxes+' boxes packed</div>'
+        )+
+      '</div>';
+    }).join('')+
+    '<button class="btn-full btn-green" onclick="markDriverReady(\''+dId+'\')" style="margin-top:8px">Mark '+dName+' ready for delivery</button>';
+}
+
+function markPacked(invId){
+  var boxInput=G('wh-boxes-'+invId);
+  var boxes=parseInt(boxInput?boxInput.value:0)||0;
+  if(!boxes){toast('Enter number of boxes');return;}
+  db.collection('delivery_invoices').doc(invId).update({status:'packed',actualBoxes:boxes})
+    .then(function(){toast('Packed!');openWhDriver(currentWhDriver);})
+    .catch(function(e){toast('Error: '+e.message);});
+}
+
+function markDriverReady(dId){
+  var invs=INVOICES.filter(function(i){return i.driverId===dId&&i.status==='packed';});
+  if(!invs.length){toast('Pack all invoices first');return;}
+  var batch=db.batch();
+  invs.forEach(function(inv){batch.update(db.collection('delivery_invoices').doc(inv.id),{status:'ready'});});
+  batch.commit().then(function(){toast('Driver marked ready!');renderWhPick();}).catch(function(e){toast('Error: '+e.message);});
+}
+
+function renderWhDone(){
+  var done=INVOICES.filter(function(i){return['ready','delivering','delivered'].includes(i.status);});
+  if(!done.length){G('wh-done-list').innerHTML='<div class="empty">Nothing packed yet</div>';return;}
+  G('wh-done-list').innerHTML=done.map(function(inv){
+    return '<div class="inv-row">'+
+      '<div class="inv-info"><div class="inv-num">'+inv.num+'</div><div class="inv-name">'+inv.customer+'</div><div class="inv-meta">'+(inv.driverName||'')+'</div></div>'+
+      '<div style="text-align:right"><div class="inv-amt">$'+inv.amount.toFixed(2)+'</div><div class="tag tag-'+(inv.status==='delivered'?'done':inv.status)+'" style="margin-top:4px">'+inv.status+'</div></div>'+
+    '</div>';
+  }).join('');
+}
+
+// ═══════════════════════════════
+// DRIVER
+// ═══════════════════════════════
+function showDriverScreen(){
+  G('drv-badge').textContent=currentUser.name;
+  showScreen('scr-driver');
+  startDriverListener();
+}
+var drvUnsub=null;
+function startDriverListener(){
+  if(drvUnsub){try{drvUnsub();}catch(e){}}
+  drvUnsub=db.collection('delivery_invoices').where('driverId','==',currentUser.id).onSnapshot(function(snap){
+    var myInvoices=[];snap.forEach(function(d){var o=d.data();o.id=d.id;myInvoices.push(o);});
+    renderDriverScreen(myInvoices);
+  });
+}
+function renderDriverScreen(myInvoices){
+  var readyInvs=myInvoices.filter(function(i){return i.status==='ready';});
+  var deliveringInvs=myInvoices.filter(function(i){return i.status==='delivering';});
+  var doneInvs=myInvoices.filter(function(i){return i.status==='delivered';});
+  var allActive=myInvoices.filter(function(i){return['ready','delivering'].includes(i.status);});
+  // Show confirm load if all are ready (not yet confirmed)
+  var hasStarted=deliveringInvs.length>0||doneInvs.length>0;
+  if(readyInvs.length>0&&!hasStarted){
+    var totalBoxes=readyInvs.reduce(function(s,i){return s+(i.actualBoxes||i.estBoxes||0);},0);
+    G('drv-expected-boxes').textContent=totalBoxes;
+    G('drv-loaded-boxes').value='';
+    G('drv-confirm-load').style.display='block';
+    G('drv-stops-wrap').style.display='none';
+    return;
+  }
+  G('drv-confirm-load').style.display='none';
+  G('drv-stops-wrap').style.display='block';
+  var total=myInvoices.length;
+  var done=doneInvs.length;
+  G('drv-summary').innerHTML=
+    '<div class="sum-card"><div class="sum-num" style="color:#1b5e20">'+done+'</div><div class="sum-lbl">Done</div></div>'+
+    '<div class="sum-card"><div class="sum-num" style="color:#0d47a1">'+(total-done)+'</div><div class="sum-lbl">Remaining</div></div>';
+  var sorted=myInvoices.sort(function(a,b){return (a.stopNum||99)-(b.stopNum||99);});
+  if(!sorted.length){G('drv-stops-list').innerHTML='<div class="empty">No deliveries assigned yet</div>';return;}
+  G('drv-stops-list').innerHTML=sorted.map(function(inv){
+    var isDone=inv.status==='delivered';
+    return '<div class="stop-row">'+
+      '<div class="stop-num '+(isDone?'stop-num-done':'stop-num-active')+'">'+(isDone?'✓':(inv.stopNum||'?'))+'</div>'+
+      '<div style="flex:1">'+
+        '<div style="font-size:13px;font-weight:500">'+inv.customer+'</div>'+
+        '<div style="font-size:11px;color:#888">Inv '+inv.num+' · $'+inv.amount.toFixed(2)+' · '+(inv.actualBoxes||inv.estBoxes||0)+' boxes</div>'+
+        (isDone?'<div style="font-size:11px;color:#1b5e20">Delivered '+fmtTime(new Date(inv.deliveredAt).getTime())+(inv.returnedBoxes>0?' · '+inv.returnedBoxes+' returned':'')+'</div>':'')+
+      '</div>'+
+      (!isDone?'<button class="btn btn-green" onclick="openDeliveryModal(\''+inv.id+'\')" style="font-size:12px;padding:8px 12px">Deliver</button>':'<div class="tag tag-done">Done</div>')+
+    '</div>';
+  }).join('');
+}
+
+function confirmLoad(){
+  var loaded=parseInt(G('drv-loaded-boxes').value)||0;
+  if(!loaded){toast('Enter number of boxes loaded');return;}
+  // Mark all ready invoices as delivering
+  var readyInvs=INVOICES.filter(function(i){return i.driverId===currentUser.id&&i.status==='ready';});
+  var batch=db.batch();
+  readyInvs.forEach(function(inv){batch.update(db.collection('delivery_invoices').doc(inv.id),{status:'delivering',loadedBoxes:loaded,departedAt:new Date().toISOString()});});
+  batch.commit().then(function(){toast('Delivery started! Drive safe.');}).catch(function(e){toast('Error: '+e.message);});
+}
+
+// DELIVERY MODAL
+function openDeliveryModal(invId){
+  var inv=INVOICES.find(function(i){return i.id===invId;});if(!inv)return;
+  currentInvoice=inv;
+  G('del-modal-title').textContent='Deliver — Stop '+(inv.stopNum||'?');
+  G('del-modal-inv-info').innerHTML='<b>'+inv.customer+'</b><br>Invoice: '+inv.num+' · $'+inv.amount.toFixed(2);
+  var boxes=inv.actualBoxes||inv.estBoxes||0;
+  G('del-exp-boxes').textContent=boxes;
+  G('del-delivered-boxes').value=boxes;
+  G('del-return-boxes').textContent=0;
+  G('del-return-section').style.display='none';
+  G('del-photo-btn').style.display='block';
+  G('del-photo-preview').style.display='none';
+  G('del-return-photo-btn').style.display='block';
+  G('del-return-photo-preview').style.display='none';
+  deliveryPhotoData=null;returnPhotoData=null;selectedReason=null;
+  document.querySelectorAll('.reason-opt').forEach(function(o){o.classList.remove('selected');});
+  G('del-other-reason').style.display='none';
+  G('del-signer-name').value='';
+  // Reset payment
+  paymentType='no';hasItemReturn=false;itemReturnPhotoData=null;
+  ['no','cash','chq'].forEach(function(t){var el=G('pay-'+t);if(el)el.classList.toggle('selected',t==='no');});
+  G('pay-cash-row').style.display='none';G('pay-chq-row').style.display='none';
+  G('pay-cash-amount').value='';G('pay-chq-num').value='';
+  // Reset item return
+  G('ret-no-btn').classList.add('selected');G('ret-yes-btn').classList.remove('selected');
+  G('item-return-section').style.display='none';
+  G('item-return-photo-btn').style.display='block';
+  G('item-return-photo-preview').style.display='none';
+  itemReturnPhotoData=null;
+  initSigPad();
+  G('delivery-modal').classList.add('open');
+}
+function closeDeliveryModal(){G('delivery-modal').classList.remove('open');}
+
+function updateReturnCount(){
+  var exp=parseInt(G('del-exp-boxes').textContent)||0;
+  var del=parseInt(G('del-delivered-boxes').value)||0;
+  var ret=Math.max(0,exp-del);
+  G('del-return-boxes').textContent=ret;
+  G('del-return-section').style.display=ret>0?'block':'none';
+}
+
+function selectReason(el,reason){
+  document.querySelectorAll('.reason-opt').forEach(function(o){o.classList.remove('selected');});
+  el.classList.add('selected');
+  selectedReason=reason;
+  G('del-other-reason').style.display=reason==='other'?'block':'none';
+}
+
+// SIGNATURE PAD
+function initSigPad(){
+  var canvas=G('sig-canvas');
+  canvas.width=canvas.offsetWidth||460;
+  canvas.height=120;
+  sigCtx=canvas.getContext('2d');
+  sigCtx.clearRect(0,0,canvas.width,canvas.height);
+  sigCtx.strokeStyle='#1a1a1a';sigCtx.lineWidth=2;sigCtx.lineCap='round';
+  isDrawing=false;
+  canvas.onmousedown=function(e){isDrawing=true;var r=canvas.getBoundingClientRect();sigCtx.beginPath();sigCtx.moveTo(e.clientX-r.left,e.clientY-r.top);};
+  canvas.onmousemove=function(e){if(!isDrawing)return;var r=canvas.getBoundingClientRect();sigCtx.lineTo(e.clientX-r.left,e.clientY-r.top);sigCtx.stroke();};
+  canvas.onmouseup=function(){isDrawing=false;};
+  canvas.ontouchstart=function(e){e.preventDefault();isDrawing=true;var r=canvas.getBoundingClientRect();var t=e.touches[0];sigCtx.beginPath();sigCtx.moveTo(t.clientX-r.left,t.clientY-r.top);};
+  canvas.ontouchmove=function(e){e.preventDefault();if(!isDrawing)return;var r=canvas.getBoundingClientRect();var t=e.touches[0];sigCtx.lineTo(t.clientX-r.left,t.clientY-r.top);sigCtx.stroke();};
+  canvas.ontouchend=function(){isDrawing=false;};
+}
+function clearSig(){if(sigCtx)sigCtx.clearRect(0,0,G('sig-canvas').width,G('sig-canvas').height);}
+
+// PHOTO
+function takeDeliveryPhoto(){
+  var input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';
+  input.onchange=function(){
+    if(!input.files[0])return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      deliveryPhotoData=e.target.result;
+      G('del-photo-preview').src=e.target.result;G('del-photo-preview').style.display='block';
+      G('del-photo-btn').style.display='none';
+    };reader.readAsDataURL(input.files[0]);
+  };input.click();
+}
+function takeReturnPhoto(){
+  var input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';
+  input.onchange=function(){
+    if(!input.files[0])return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      returnPhotoData=e.target.result;
+      G('del-return-photo-preview').src=e.target.result;G('del-return-photo-preview').style.display='block';
+      G('del-return-photo-btn').style.display='none';
+    };reader.readAsDataURL(input.files[0]);
+  };input.click();
+}
+
+// PAYMENT
+function selectPayment(type){
+  paymentType=type;
+  ['no','cash','chq'].forEach(function(t){
+    var el=G('pay-'+t);if(el)el.classList.remove('selected');
+  });
+  G('pay-'+type).classList.add('selected');
+  G('pay-cash-row').style.display=type==='cash'?'block':'none';
+  G('pay-chq-row').style.display=type==='cheque'?'block':'none';
+}
+
+// ITEM RETURN
+function selectItemReturn(val){
+  hasItemReturn=val==='yes';
+  G('ret-no-btn').classList.toggle('selected',!hasItemReturn);
+  G('ret-yes-btn').classList.toggle('selected',hasItemReturn);
+  G('item-return-section').style.display=hasItemReturn?'block':'none';
+}
+
+function takeItemReturnPhoto(){
+  var input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';
+  input.onchange=function(){
+    if(!input.files[0])return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      itemReturnPhotoData=e.target.result;
+      G('item-return-photo-preview').src=e.target.result;
+      G('item-return-photo-preview').style.display='block';
+      G('item-return-photo-btn').style.display='none';
+    };reader.readAsDataURL(input.files[0]);
+  };input.click();
+}
+
+// CONFIRM DELIVERY
+function confirmDelivery(){
+  var inv=currentInvoice;if(!inv)return;
+  var delivered=parseInt(G('del-delivered-boxes').value)||0;
+  var expected=parseInt(G('del-exp-boxes').textContent)||0;
+  var returned=Math.max(0,expected-delivered);
+  if(!deliveryPhotoData){toast('Please take a delivery photo');return;}
+  var sigData=G('sig-canvas').toDataURL();
+  var isBlank=sigCtx.getImageData(0,0,G('sig-canvas').width,G('sig-canvas').height).data.every(function(v,i){return i%4===3?true:v===0;});
+  if(isBlank){toast('Please get customer signature');return;}
+  if(returned>0&&!selectedReason){toast('Please select reason for return');return;}
+  if(returned>0&&selectedReason==='other'&&!G('del-other-reason').value.trim()){toast('Please type the return reason');return;}
+  var reason=returned>0?(selectedReason==='other'?G('del-other-reason').value.trim():selectedReason):'';
+  // Payment
+  var payAmount=paymentType==='cash'?parseFloat(G('pay-cash-amount').value)||0:0;
+  var payChqNum=paymentType==='cheque'?G('pay-chq-num').value.trim():'';
+  // Item return validation
+  if(hasItemReturn&&!itemReturnPhotoData){toast('Please take photo of returned items');return;}
+  toast('Saving...');
+  var invRef=db.collection('delivery_invoices').doc(inv.id);
+  var updates={
+    status:'delivered',deliveredBoxes:delivered,returnedBoxes:returned,
+    returnReason:reason,deliveredAt:new Date().toISOString(),
+    driverName:currentUser.name,signature:sigData,signerName:G('del-signer-name').value.trim(),
+    paymentType:paymentType,paymentAmount:payAmount,paymentChequeNum:payChqNum,
+    hasItemReturn:hasItemReturn
+  };
+  var photoPromises=[];
+  if(deliveryPhotoData){
+    var photoRef=storage.ref('delivery_photos/'+inv.id+'_delivery.jpg');
+    photoPromises.push(photoRef.putString(deliveryPhotoData,'data_url').then(function(){return photoRef.getDownloadURL();}).then(function(url){updates.deliveryPhoto=url;}));
+  }
+  if(returnPhotoData&&returned>0){
+    var rPhotoRef=storage.ref('delivery_photos/'+inv.id+'_return.jpg');
+    photoPromises.push(rPhotoRef.putString(returnPhotoData,'data_url').then(function(){return rPhotoRef.getDownloadURL();}).then(function(url){updates.returnPhoto=url;}));
+  }
+  if(itemReturnPhotoData&&hasItemReturn){
+    var irPhotoRef=storage.ref('delivery_photos/'+inv.id+'_item_return.jpg');
+    photoPromises.push(irPhotoRef.putString(itemReturnPhotoData,'data_url').then(function(){return irPhotoRef.getDownloadURL();}).then(function(url){updates.itemReturnPhoto=url;}));
+  }
+  Promise.all(photoPromises).then(function(){
+    return invRef.update(updates);
+  }).then(function(){
+    closeDeliveryModal();toast('Delivery confirmed!');
+  }).catch(function(e){toast('Error: '+e.message);});
+}
+
+// SEARCH FILTERS
+G('assign-search').addEventListener('input',renderAssignList);
+G('assign-filter').addEventListener('change',renderAssignList);
+G('proof-search').addEventListener('input',renderProofList);
+G('proof-date').addEventListener('change',renderProofList);
+G('pin-field').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'');});
+G('pin-field').addEventListener('keydown',function(e){if(e.key==='Enter')doCheckPin();});
+G('pin-btn').addEventListener('click',doCheckPin);
+
+// INIT
+G('proof-date').value=today();
+</script>
+</body>
+</html>
